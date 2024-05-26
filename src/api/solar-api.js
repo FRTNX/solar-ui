@@ -1,4 +1,4 @@
-const BASE_URL = 'https://solar-ui.onrender.com';
+const BASE_URL = 'https://solar-sim.onrender.com';
 // const BASE_URL = 'http://localhost:8001'
 
 const initDefault = async () => {
