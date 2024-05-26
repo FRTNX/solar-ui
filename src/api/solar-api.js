@@ -3,7 +3,7 @@ const BASE_URL = 'https://solar-sim.onrender.com';
 
 const initDefault = async () => {
     try {
-        const response = await fetch(`${BASE_URL}:8001/pv/init/default`, {
+        const response = await fetch(`${BASE_URL}/pv/init/default`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
