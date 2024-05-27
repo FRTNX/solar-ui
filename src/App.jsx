@@ -208,8 +208,8 @@ function App() {
                     <div key={index}>
                       <button style={{ width: '100%' }} type={'button'} onClick={() => toggleBattery(battery.id)}>
                         <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 40 }}>{battery.capacity} V</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 40 }}>{battery.amps} aH</p>
+                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
+                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} aH</p>
                         <BatteryGauge style={{ width: '50%', display: 'inline-block' }} value={battery['soc'] * 100} size={50} />
                       </button>
                       {
