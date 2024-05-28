@@ -28,7 +28,7 @@ function App() {
   const [systemId, setSystemId] = useState('');
   const [systemData, setSystemData] = useState([]);
   const [systemTime, setSystemTime] = useState('');
-  const [temparature, setTemparature] = useState(0);
+  const [temperature, setTemperature] = useState(0);
 
   const [batteryArrayPower, setBatteryArrayPower] = useState(0);
   const [batteries, setBatteries] = useState([]);
@@ -71,7 +71,7 @@ function App() {
       setPanels(system['result']['panels'])
       setBatteries(system['result']['batteries'])
       setActive(system['result']['active'])
-      setTemparature(system['result']['temparature'])
+      setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
     }
   };
@@ -157,7 +157,7 @@ function App() {
                     </div>
                     <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
                       <CircularProgressbarWithChildren
-                        value={temparature}
+                        value={temperature}
                         maxValue={40}
                         styles={buildStyles({
                           textSize: '10px',
@@ -168,8 +168,8 @@ function App() {
                         })}
                       >
                         <div>
-                          <p style={{ fontSize: 11 }}>Temparature</p>
-                          <p>{`${Number(temparature).toFixed(1)} ℃`}<math></math></p>
+                          <p style={{ fontSize: 11 }}>temperature</p>
+                          <p>{`${Number(temperature).toFixed(1)} ℃`}<math></math></p>
                         </div>
                       </CircularProgressbarWithChildren>
                     </div>
@@ -209,7 +209,7 @@ function App() {
                       <button style={{ width: '100%' }} type={'button'} onClick={() => toggleBattery(battery.id)}>
                         <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} aH</p>
+                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
                         <BatteryGauge style={{ width: '50%', display: 'inline-block' }} value={battery['soc'] * 100} size={50} />
                       </button>
                       {
@@ -250,7 +250,7 @@ function App() {
                         <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temparature']).toFixed(1)} ℃`}</p>
+                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
                       </button>
                       {
