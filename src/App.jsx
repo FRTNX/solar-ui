@@ -15,10 +15,13 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+// import GaugeChart from 'react-gauge-chart';
+
 import { initDefault, fetchPVSystem } from './api/solar-api'
 
 import './App.css'
 import 'react-circular-progressbar/dist/styles.css';
+
 
 const PATH_TRANSITION_DURATION = 2;
 
@@ -177,19 +180,25 @@ function App() {
                 </div>
                 <ResponsiveContainer width='100%' height={200}>
                   <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                    <Area name='Total Solar Array Output (Watts)' label={'Solar Array Output'} type="monotone" dataKey="solar_array_output" stroke="#8884d8" />
-                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                    <Area
+                      name='Total Solar Array Output (Watts)'
+                      label={'Solar Array Output'}
+                      type="monotone"
+                      dataKey="solar_array_output"
+                      stroke="#8884d8"
+                      fillOpacity={1}
+                    />
+                    <CartesianGrid stroke="grey" strokeDasharray="3 3" />
                     <XAxis dataKey="time" />
                     <YAxis />
                     <Tooltip />
-                    <Legend formatter={(value, entry, index) => <span style={{ color: 'grey'}}>{value}</span>}/>
+                    <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             )
           }
         </div>
-        {/* <BatteryGauge style={{ width: '50%', display: 'inline-block' }} value={batteryArrayPower} size={200} /> */}
       </div>
       <div style={{ width: '100%', textAlign: 'center' }}>
         <div style={{ width: 600, display: 'inline-block' }}>
@@ -218,11 +227,11 @@ function App() {
                             <ResponsiveContainer width='100%' height={200}>
                               <LineChart data={battery['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                                 <Line name='Available Battery Power' type="monotone" dataKey='available_power' stroke="#8884d8" />
-                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <CartesianGrid stroke="grey" strokeDasharray="3 3" />
                                 <XAxis />
                                 <YAxis />
                                 <Tooltip />
-                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey'}}>{value}</span>}/>
+                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
                               </LineChart>
                             </ResponsiveContainer>
                           </div>
@@ -246,7 +255,6 @@ function App() {
                   panels.map((panel, index) => (
                     <div key={index}>
                       <button style={{ width: '100%' }} type={'button'} onClick={() => toggleBattery(battery.id)}>
-                        {/* <p style={{ width: '30%', display: 'inline-block' }}>{panel['panel_id']}</p> */}
                         <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
@@ -259,11 +267,11 @@ function App() {
                             <ResponsiveContainer width='100%' height={200}>
                               <LineChart data={panel['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
                                 <Line name="Solar Panel Output (Watts)" type="monotone" dataKey="power_output" stroke="#8884d8" />
-                                <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                                <CartesianGrid stroke="grey" strokeDasharray="3 3" />
                                 <XAxis />
                                 <YAxis />
                                 <Tooltip />
-                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey'}}>{value}</span>}/>
+                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
                               </LineChart>
                             </ResponsiveContainer>
                           </div>
