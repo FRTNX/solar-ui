@@ -177,7 +177,7 @@ function App() {
                         })}
                       >
                         <div>
-                          <p style={{ fontSize: 11 }}>temperature</p>
+                          <p style={{ fontSize: 11 }}>Temperature</p>
                           <p>{`${Number(temperature).toFixed(1)} ℃`}<math></math></p>
                         </div>
                       </CircularProgressbarWithChildren>
