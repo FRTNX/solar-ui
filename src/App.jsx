@@ -15,7 +15,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-// import GaugeChart from 'react-gauge-chart';
+import GaugeChart from 'react-gauge-chart';
 
 import { initDefault, fetchPVSystem } from './api/solar-api'
 
@@ -30,6 +30,7 @@ function App() {
   const [active, setActive] = useState(true)
   const [systemId, setSystemId] = useState('');
   const [systemData, setSystemData] = useState([]);
+
   const [systemTime, setSystemTime] = useState('');
   const [temperature, setTemperature] = useState(0);
 
@@ -40,6 +41,9 @@ function App() {
   const [solarIrradiance, setSolarIrradiance] = useState(0);
   const [solarArrayOutput, setSolarArrayOutput] = useState(0);
   const [panels, setPanels] = useState([]);
+
+  const [inverterData, setInverterData] = useState({})
+  const [coolingSystems, setCoolingSystems] = useState([])
 
   useEffect(() => {
     async function init() {
@@ -76,6 +80,8 @@ function App() {
       setActive(system['result']['active'])
       setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
+      setInverterData(system['result']['inverter'])
+      setCoolingSystems(system['result']['cooling_systems'])
     }
   };
 
@@ -178,23 +184,87 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <ResponsiveContainer width='100%' height={200}>
-                  <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                    <Area
-                      name='Total Solar Array Output (Watts)'
-                      label={'Solar Array Output'}
-                      type="monotone"
-                      dataKey="solar_array_output"
-                      stroke="#8884d8"
-                      fillOpacity={1}
-                    />
-                    <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                    <XAxis dataKey="time" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div>
+                  <ResponsiveContainer width='100%' height={200}>
+                    <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                      <Area
+                        name='Total Solar Array Output (Watts)'
+                        label={'Solar Array Output'}
+                        type="monotone"
+                        dataKey="solar_array_output"
+                        stroke="#133113"
+                        fill='#8291cd'
+                        fillOpacity={1}
+                      />
+                      <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                      <XAxis dataKey="time" />
+                      <YAxis />
+                      <Tooltip />
+                      <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div>
+                  {
+                    inverterData && (
+                      <div style={{ width: '100%', textAlign: 'center' }}>
+                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Inverter Details</p>
+                        <div style={{ width: '80%', display: 'inline-block' }}>
+                          <ResponsiveContainer width='100%' height={200}>
+                            <AreaChart data={inverterData['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                              <Area
+                                name='Inverter Output (Watts)'
+                                type="monotone"
+                                dataKey="output"
+                                stroke="grey"
+                                fill='#82ca9d'
+                                fillOpacity={0.8}
+                              />
+                              <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                              <XAxis />
+                              <YAxis />
+                              <Tooltip />
+                              <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div style={{ width: '20%', display: 'inline-block', verticalAlign: 'top', paddingTop: 40 }}>
+                          <GaugeChart
+                            id='gc-1'
+                            nrOfLevels={30}
+                            percent={inverterData['output'] / inverterData['max_output']}
+                          />
+                          <p style={{ color: 'grey' }}>Inverter Load</p>
+                        </div>
+                      </div>
+                    )
+                  }
+                </div>
+                <div>
+                  {
+                    coolingSystems.length > 0 && (
+                      <div style={{ width: '100%', textAlign: 'center' }}>
+                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Cooling Systems</p>
+                        {
+                          coolingSystems.map((coolingSystem, index) => (
+                            <div style={{ width: '50%', display: 'inline-block' }}>
+                              <ResponsiveContainer width='100%' height={200}>
+                                <LineChart data={coolingSystem['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                  <Line name='Cooling System Output (℃)' type="monotone" dataKey='output' stroke="#8884d8" />
+                                  <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                                  <XAxis />
+                                  <YAxis />
+                                  <Tooltip />
+                                  <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )
+                  }
+                </div>
               </div>
             )
           }
