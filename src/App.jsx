@@ -27,7 +27,7 @@ import { initDefault, fetchPVSystem, updateCoolingSystem } from './api/solar-api
 import './App.css'
 
 
-const PATH_TRANSITION_DURATION = 2;
+const PATH_TRANSITION_DURATION = 1.5;
 
 const MenuIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
@@ -49,14 +49,40 @@ function App() {
 
   const [solarIrradiance, setSolarIrradiance] = useState(0);
   const [solarArrayOutput, setSolarArrayOutput] = useState(0);
+  const [maxSolarOutput, setMaxSolarOutput] = useState(1000);
+  const [aggrSolarOutput, setAggrSolarOutput] = useState(0);
+
   const [panels, setPanels] = useState([]);
-
   const [inverterData, setInverterData] = useState({});
-  const [coolingSystems, setCoolingSystems] = useState([]);
-  const [coolingSystemsOn, setCoolingSystemsOn] = useState(true);
 
+  const [coolingSystems, setCoolingSystems] = useState([]);
   const [localCooling, setLocalCooling] = useState(true);
   const [serverCooling, setServerCooling] = useState(true);
+
+  const [statsLeft, setStatsLeft] = useState(140);
+  const [windowSize, setWindowSize] = useState([
+    window.innerWidth,
+    window.innerHeight,
+  ]);
+
+  useEffect(() => {
+    const handleWindowResize = () => {
+      console.log('width: ', window.innerWidth)
+      if (window,innerWidth < 1400) {
+        const diff = Math.abs(140 - (window.innerWidth / 10)) + 50;
+        setStatsLeft(140 - diff)
+      } else {
+        setStatsLeft(140)
+      }
+      setWindowSize([window.innerWidth, window.innerHeight]);
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -66,7 +92,7 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(() => updateSystemDetails(), 2000);
+    const interval = setInterval(() => updateSystemDetails(), 1500);
 
     if (!active) {
       clearInterval(interval);
@@ -96,6 +122,8 @@ function App() {
       setInverterData(system['result']['inverter']);
       setCoolingSystems(system['result']['cooling_systems']);
       setServerCooling(system['result']['panel_cooling']);
+      setMaxSolarOutput(system['result']['max_solar_output']);
+      setAggrSolarOutput(system['result']['aggregated_solar_output']);
     }
   };
 
@@ -136,9 +164,11 @@ function App() {
     console.log(`removing panel: ${panelId}`)
   }
 
-  const removeBattery = (batteryId) => {{
-    console.log(`removing battery: ${batteryId}`)
-  }}
+  const removeBattery = (batteryId) => {
+    {
+      console.log(`removing battery: ${batteryId}`)
+    }
+  }
 
   return (
     <>
@@ -148,18 +178,28 @@ function App() {
             systemData.length > 0 && (
               <div>
                 <div style={{ width: '100%', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', width: '50%' }}>
+                  <div style={{ display: 'inline-block', width: '50%', position: 'relative' }}>
                     <p style={{ fontSize: 100 }}>{systemTime.slice(11, 16)} {getTimeEmoji(Number(systemTime.slice(11, 13)))}</p>
+                    <p style={{ position: 'absolute', top: 230, left: statsLeft }}>
+                      {`Total Photovoltaic Output: ${Number(aggrSolarOutput / 1000).toFixed(2)} kW/`}
+                      <math>
+                        <msup>
+                          <mi>m</mi>
+                          <mn>2</mn>
+                        </msup>
+                      </math>
+                    </p>
                   </div>
                   <div style={{ display: 'inline-block', width: '50%' }}>
                     <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
                       <CircularProgressbarWithChildren
                         value={solarArrayOutput}
-                        maxValue={500}
+                        maxValue={maxSolarOutput}
                         styles={buildStyles({
                           textSize: '10px',
                           strokeLinecap: 'butt',
-                          pathColor: 'green',
+                          pathColor: 'yellow',
+                          trailColor: 'grey',
                           textColor: 'white',
                           pathTransitionDuration: PATH_TRANSITION_DURATION
                         })}
@@ -181,11 +221,12 @@ function App() {
                     <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
                       <CircularProgressbarWithChildren
                         value={solarIrradiance}
-                        maxValue={10000}
+                        maxValue={1100}
                         styles={buildStyles({
                           textSize: '10px',
                           strokeLinecap: 'butt',
-                          pathColor: 'green',
+                          pathColor: 'yellow',
+                          trailColor: 'grey',
                           textColor: 'white',
                           pathTransitionDuration: PATH_TRANSITION_DURATION
                         })}
@@ -211,7 +252,8 @@ function App() {
                         styles={buildStyles({
                           textSize: '10px',
                           strokeLinecap: 'butt',
-                          pathColor: 'green',
+                          pathColor: 'yellow',
+                          trailColor: 'grey',
                           textColor: 'white',
                           pathTransitionDuration: PATH_TRANSITION_DURATION
                         })}
@@ -232,9 +274,9 @@ function App() {
                         label={'Solar Array Output'}
                         type="monotone"
                         dataKey="solar_array_output"
-                        stroke="#133113"
-                        fill='#8291cd'
-                        fillOpacity={1}
+                        stroke="#FFD700"
+                        fill='#FFD700'
+                        fillOpacity={0.65}
                       />
                       <CartesianGrid stroke="grey" strokeDasharray="3 3" />
                       <XAxis dataKey="time" />
@@ -256,7 +298,7 @@ function App() {
                                 name='Inverter Output (Watts)'
                                 type="monotone"
                                 dataKey="output"
-                                stroke="grey"
+                                stroke="#82ca9d"
                                 fill='#82ca9d'
                                 fillOpacity={0.8}
                               />
@@ -341,19 +383,19 @@ function App() {
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
-                        <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
-                        <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
-                          <Menu
-                            menuButton={<MenuButton><MenuIcon /></MenuButton>}
-                            menuStyle={{ backgroundColor: '#323030', color: 'white' }}
-                            key={`solar-panel-menu-${index}`}
-                            direction={'left'}
-                            transition
-                          >
-                            <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
-                            <MenuItem>Battery Details</MenuItem>
-                          </Menu>
-                        </div>
+                          <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
+                          <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                            <Menu
+                              menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                              menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                              key={`solar-panel-menu-${index}`}
+                              direction={'left'}
+                              transition
+                            >
+                              <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
+                              <MenuItem>Battery Details</MenuItem>
+                            </Menu>
+                          </div>
                         </p>
                       </div>
                       {
@@ -379,7 +421,7 @@ function App() {
             )
           }
           <div style={{ position: 'relative' }}>
-            <button style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}>
+            <button style={{ backgroundColor: batteries.length > 0 ? 'green' : 'black', position: 'absolute', left: '5px', top: 20 }}>
               Add New Battery
             </button>
           </div>
@@ -436,7 +478,7 @@ function App() {
             )
           }
           <div style={{ position: 'relative' }}>
-            <button style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}>
+            <button style={{ backgroundColor: panels.length > 0 ? 'green' : 'black', position: 'absolute', left: '5px', top: 20 }}>
               Add New Solar Panel
             </button>
           </div>
