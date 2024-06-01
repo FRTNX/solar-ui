@@ -1,5 +1,5 @@
 const BASE_URL = 'https://solar-sim.onrender.com';
-// const BASE_URL = 'http://localhost:8001'
+// const BASE_URL = 'http://localhost:8001';
 
 const initDefault = async () => {
     try {
@@ -29,9 +29,58 @@ const fetchPVSystem = async (systemId) => {
     } catch (error) {
         console.log(error);
     }
+};
+
+const updateCoolingSystem = async (params) => {
+    try {
+        const response = await fetch(`${BASE_URL}/pv/cooling/update`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error)
+    }
+};
+
+const removePVPanel = async (systemId, panelId) => {
+    try {
+        const response = await fetch(`${BASE_URL}/pv/system?system_id=${systemId}&&panel_id=${panelId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error)
+    }
+};
+
+const removePVBattery = async (systemId, batteryId) => {
+    try {
+        const response = await fetch(``, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 export {
     initDefault,
-    fetchPVSystem
-}
+    fetchPVSystem,
+    updateCoolingSystem,
+    removePVBattery,
+    removePVPanel
+};

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import BatteryGauge from 'react-battery-gauge';
 import { CircularProgressbarWithChildren, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 import {
   LineChart,
@@ -16,15 +17,23 @@ import {
 } from 'recharts';
 
 import GaugeChart from 'react-gauge-chart';
+import Switch from 'react-switch';
 
-import { initDefault, fetchPVSystem } from './api/solar-api'
+import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
+import '@szhsin/react-menu/dist/index.css';
+import '@szhsin/react-menu/dist/transitions/slide.css';
 
+import { initDefault, fetchPVSystem, updateCoolingSystem } from './api/solar-api'
 import './App.css'
-import 'react-circular-progressbar/dist/styles.css';
 
 
 const PATH_TRANSITION_DURATION = 2;
 
+const MenuIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
+    <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
+  </svg>
+)
 
 function App() {
   const [active, setActive] = useState(true)
@@ -42,8 +51,12 @@ function App() {
   const [solarArrayOutput, setSolarArrayOutput] = useState(0);
   const [panels, setPanels] = useState([]);
 
-  const [inverterData, setInverterData] = useState({})
-  const [coolingSystems, setCoolingSystems] = useState([])
+  const [inverterData, setInverterData] = useState({});
+  const [coolingSystems, setCoolingSystems] = useState([]);
+  const [coolingSystemsOn, setCoolingSystemsOn] = useState(true);
+
+  const [localCooling, setLocalCooling] = useState(true);
+  const [serverCooling, setServerCooling] = useState(true);
 
   useEffect(() => {
     async function init() {
@@ -80,8 +93,9 @@ function App() {
       setActive(system['result']['active'])
       setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
-      setInverterData(system['result']['inverter'])
-      setCoolingSystems(system['result']['cooling_systems'])
+      setInverterData(system['result']['inverter']);
+      setCoolingSystems(system['result']['cooling_systems']);
+      setServerCooling(system['result']['panel_cooling']);
     }
   };
 
@@ -107,6 +121,24 @@ function App() {
   const toggleBatteries = () => { };
 
   const toggleBattery = (id) => { }
+
+  const toggleCoolingSystems = () => {
+    if (localCooling) {
+      setLocalCooling(false)
+      updateCoolingSystem({ system_id: systemId, active: false })
+    } else {
+      setLocalCooling(true);
+      updateCoolingSystem({ system_id: systemId, active: true })
+    }
+  };
+
+  const removePanel = (panelId) => {
+    console.log(`removing panel: ${panelId}`)
+  }
+
+  const removeBattery = (batteryId) => {{
+    console.log(`removing battery: ${batteryId}`)
+  }}
 
   return (
     <>
@@ -149,7 +181,7 @@ function App() {
                     <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
                       <CircularProgressbarWithChildren
                         value={solarIrradiance}
-                        maxValue={1000}
+                        maxValue={10000}
                         styles={buildStyles({
                           textSize: '10px',
                           strokeLinecap: 'butt',
@@ -160,7 +192,15 @@ function App() {
                       >
                         <div>
                           <p style={{ fontSize: 11 }}>Solar Iraddiance</p>
-                          <p>{`${Number(solarIrradiance).toFixed(2)} W`}</p>
+                          <p>
+                            {`${Number(solarIrradiance).toFixed(2)} W/`}
+                            <math>
+                              <msup>
+                                <mi>m</mi>
+                                <mn>2</mn>
+                              </msup>
+                            </math>
+                          </p>
                         </div>
                       </CircularProgressbarWithChildren>
                     </div>
@@ -243,8 +283,19 @@ function App() {
                 <div>
                   {
                     coolingSystems.length > 0 && (
-                      <div style={{ width: '100%', textAlign: 'center' }}>
-                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Cooling Systems</p>
+                      <div style={{ width: '100%', textAlign: 'center', position: 'relative' }}>
+                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey', display: 'inline-block' }}>Cooling Systems</p>
+                        <label style={{ display: 'inline-block', position: 'absolute', top: 68, paddingLeft: 20 }}>
+                          <Switch
+                            onChange={() => toggleCoolingSystems()}
+                            // onClick={() => toggleCoolingSystems()}
+                            checked={localCooling}
+                            checkedIcon={false}
+                            uncheckedIcon={false}
+                            disabled={localCooling !== serverCooling}
+                          />
+                        </label>
+                        <br />
                         {
                           coolingSystems.map((coolingSystem, index) => (
                             <div style={{ width: '50%', display: 'inline-block' }}>
@@ -270,27 +321,41 @@ function App() {
           }
         </div>
       </div>
-      <div style={{ width: '100%', textAlign: 'center' }}>
+      <div style={{ width: '100%', textAlign: 'center', paddingBottom: 200 }}>
         <div style={{ width: 600, display: 'inline-block' }}>
         </div>
         <div style={{ width: 600, display: 'inline-block' }}>
         </div>
         <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
-          <button style={{ width: '100%' }} type={'button'}>
+          <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
             <p style={{ width: '50%', display: 'inline-block' }}>Battery Array</p>
-          </button>
+          </div>
           {
             displayBatteries && (
               <div>
                 {
                   batteries.map((battery, index) => (
                     <div key={index}>
-                      <button style={{ width: '100%' }} type={'button'} onClick={() => toggleBattery(battery.id)}>
+                      <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
                         <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
-                        <BatteryGauge style={{ width: '50%', display: 'inline-block' }} value={battery['soc'] * 100} size={50} />
-                      </button>
+                        <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
+                        <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
+                        <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                          <Menu
+                            menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                            menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                            key={`solar-panel-menu-${index}`}
+                            direction={'left'}
+                            transition
+                          >
+                            <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
+                            <MenuItem>Battery Details</MenuItem>
+                          </Menu>
+                        </div>
+                        </p>
+                      </div>
                       {
                         battery['time_series'] && (
                           <div style={{ width: '100%' }}>
@@ -313,24 +378,41 @@ function App() {
               </div>
             )
           }
+          <div style={{ position: 'relative' }}>
+            <button style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}>
+              Add New Battery
+            </button>
+          </div>
         </div>
         <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
-          <button style={{ width: '100%' }} type={'button'}>
+          <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
             <p style={{ width: '50%', display: 'inline-block' }}>Solar Array</p>
-          </button>
+          </div>
           {
             displayBatteries && (
               <div>
                 {
                   panels.map((panel, index) => (
                     <div key={index}>
-                      <button style={{ width: '100%' }} type={'button'} onClick={() => toggleBattery(battery.id)}>
+                      <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
                         <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
                         <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
-                      </button>
+                        <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                          <Menu
+                            menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                            menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                            key={`solar-panel-menu-${index}`}
+                            direction={'left'}
+                            transition
+                          >
+                            <MenuItem onClick={() => removePanel(panel['panel_id'])}>Remove Panel</MenuItem>
+                            <MenuItem>Panel Details</MenuItem>
+                          </Menu>
+                        </div>
+                      </div>
                       {
                         panel['time_series'] && (
                           <div style={{ width: '100%' }}>
@@ -353,6 +435,11 @@ function App() {
               </div>
             )
           }
+          <div style={{ position: 'relative' }}>
+            <button style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}>
+              Add New Solar Panel
+            </button>
+          </div>
         </div>
       </div>
     </>

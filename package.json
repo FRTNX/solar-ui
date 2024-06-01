@@ -10,11 +10,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@szhsin/react-menu": "^4.1.0",
     "react": "^18.2.0",
     "react-battery-gauge": "^1.0.7",
     "react-circular-progressbar": "^2.1.0",
     "react-dom": "^18.2.0",
     "react-gauge-chart": "^0.5.1",
+    "react-indiana-drag-scroll": "^2.2.0",
+    "react-modal": "^3.16.1",
+    "react-switch": "^7.0.0",
     "recharts": "^2.12.7"
   },
   "devDependencies": {
