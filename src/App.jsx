@@ -18,6 +18,7 @@ import {
 
 import GaugeChart from 'react-gauge-chart';
 import Switch from 'react-switch';
+import Modal from 'react-modal';
 
 import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
 import '@szhsin/react-menu/dist/index.css';
@@ -34,6 +35,8 @@ const MenuIcon = () => (
     <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0" />
   </svg>
 )
+
+Modal.setAppElement('#root');
 
 function App() {
   const [active, setActive] = useState(true)
@@ -67,8 +70,7 @@ function App() {
 
   useEffect(() => {
     const handleWindowResize = () => {
-      console.log('width: ', window.innerWidth)
-      if (window,innerWidth < 1400) {
+      if (window, innerWidth < 1400) {
         const diff = Math.abs(140 - (window.innerWidth / 10)) + 50;
         setStatsLeft(140 - diff)
       } else {
@@ -170,6 +172,254 @@ function App() {
     }
   }
 
+  let subtitle;
+  const [solarModalOpen, setSolarModalOpen] = useState(false);
+  const [batteryModalOpen, setBatteryModalOpen] = useState(false);
+  const [inverterModalOpen, setInverterModalOpen] = useState(false);
+
+  function openSolarModal() {
+    setSolarModalOpen(true);
+  }
+
+  function closeSolarModal() {
+    setSolarModalOpen(false);
+  }
+
+  const openBatteryModal = () => {
+    setBatteryModalOpen(true);
+  }
+
+  const closeBatteryModel = () => {
+    setBatteryModalOpen(false);
+  }
+
+  const openInverterModal = () => {
+    setInverterModalOpen(true);
+  }
+
+  const closeInverterModal = () => {
+    setInverterModalOpen(false);
+  }
+
+
+  const SolarPanelModal = () => {
+    return (
+      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
+        <Modal
+          isOpen={solarModalOpen}
+          onRequestClose={closeSolarModal}
+          style={{
+            overlay: {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'transparent',
+              textAlign: 'center',
+
+            },
+            content: {
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 500,
+              height: 555,
+              border: '10px solid grey',
+              background: '#111111',
+              overflow: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              borderRadius: '15px',
+              outline: 'none',
+              padding: '20px'
+            }
+          }}
+          contentLabel="Example Modal"
+        >
+          <h2>Add Solar Panel</h2>
+          <form >
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Power Rating (Watts):</label><br />
+              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='panel-efficiency' style={{ position: 'absolute', left: 20 }}>Efficiency (%):</label><br />
+              <input type='number' id='panel-efficiency' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Optimal Temperature (℃):</label><br />
+              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Temperature Coefficient (%):</label><br />
+              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 60 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20, top: 372 }}>
+                <p>
+                  {'Area ( '}
+                  <math>
+                    <msup>
+                      <mi>m</mi>
+                      <mn>2</mn>
+                    </msup>
+                  </math>
+                  {')'}
+                </p>
+              </label><br />
+              <input id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingTop: 10 }}>
+              <button
+                onClick={closeSolarModal}
+                style={{ position: 'absolute', right: 150, backgroundColor: 'red', borderRadius: 5 }}
+              >
+                Cancel
+              </button>
+              <button
+                type='submit'
+                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
+              >
+                Add Panel
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </div>
+    );
+  };
+
+  const BatteryModal = () => {
+    return (
+      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
+        <Modal
+          isOpen={batteryModalOpen}
+          onRequestClose={closeBatteryModel}
+          style={{
+            overlay: {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'transparent',
+              textAlign: 'center',
+
+            },
+            content: {
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 500,
+              height: 320,
+              border: '10px solid grey',
+              background: '#111111',
+              overflow: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              borderRadius: '15px',
+              outline: 'none',
+              padding: '20px'
+            }
+          }}
+          contentLabel="Example Modal"
+        >
+          <h2>Add Battery</h2>
+          <form >
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Volts:</label><br />
+              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Amperes (Ah):</label><br />
+              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingTop: 40 }}>
+              <button
+                onClick={closeBatteryModel}
+                style={{ position: 'absolute', right: 165, backgroundColor: 'red', borderRadius: 5 }}
+              >
+                Cancel
+              </button>
+              <button
+                type='submit'
+                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
+              >
+                Add Battery
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </div>
+    );
+  };
+
+  const InverterModal = () => {
+    return (
+      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
+        <Modal
+          isOpen={inverterModalOpen}
+          onRequestClose={closeInverterModal}
+          style={{
+            overlay: {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'transparent',
+              textAlign: 'center',
+
+            },
+            content: {
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: 500,
+              height: 333,
+              border: '10px solid grey',
+              background: '#111111',
+              overflow: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              borderRadius: '15px',
+              outline: 'none',
+              padding: '20px'
+            }
+          }}
+          contentLabel="Example Modal"
+        >
+          <h2>Edit Inverter</h2>
+          <form >
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Max Output (Watts):</label><br />
+              <input id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingBottom: 10 }}>
+              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Input Voltage (Volts):</label><br />
+              <input id='power-rating' style={{ width: '100%', height: 35 }} />
+            </div>
+            <div style={{ paddingTop: 10 }}>
+              <button
+                onClick={closeInverterModal}
+                style={{ position: 'absolute', right: 150, backgroundColor: 'red', borderRadius: 5 }}
+              >
+                Cancel
+              </button>
+              <button
+                type='submit'
+                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
+              >
+                Edit Inverter
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </div>
+    )
+  }
+
   return (
     <>
       <div>
@@ -181,13 +431,7 @@ function App() {
                   <div style={{ display: 'inline-block', width: '50%', position: 'relative' }}>
                     <p style={{ fontSize: 100 }}>{systemTime.slice(11, 16)} {getTimeEmoji(Number(systemTime.slice(11, 13)))}</p>
                     <p style={{ position: 'absolute', top: 230, left: statsLeft }}>
-                      {`Total Photovoltaic Output: ${Number(aggrSolarOutput / 1000).toFixed(2)} kW/`}
-                      <math>
-                        <msup>
-                          <mi>m</mi>
-                          <mn>2</mn>
-                        </msup>
-                      </math>
+                      {`Total Photovoltaic Output: ${Number(aggrSolarOutput / 1000).toFixed(2)} kW`}
                     </p>
                   </div>
                   <div style={{ display: 'inline-block', width: '50%' }}>
@@ -290,7 +534,7 @@ function App() {
                   {
                     inverterData && (
                       <div style={{ width: '100%', textAlign: 'center' }}>
-                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Inverter Details</p>
+                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Inverter</p>
                         <div style={{ width: '80%', display: 'inline-block' }}>
                           <ResponsiveContainer width='100%' height={200}>
                             <AreaChart data={inverterData['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
@@ -421,9 +665,18 @@ function App() {
             )
           }
           <div style={{ position: 'relative' }}>
-            <button style={{ backgroundColor: batteries.length > 0 ? 'green' : 'black', position: 'absolute', left: '5px', top: 20 }}>
-              Add New Battery
-            </button>
+            {
+              batteries.length > 0 && (
+                <button
+                  style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}
+                  onClick={openBatteryModal}
+                  disabled={batteryModalOpen}
+                >
+                  Add New Battery
+                </button>
+              )
+            }
+            <BatteryModal />
           </div>
         </div>
         <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
@@ -478,9 +731,18 @@ function App() {
             )
           }
           <div style={{ position: 'relative' }}>
-            <button style={{ backgroundColor: panels.length > 0 ? 'green' : 'black', position: 'absolute', left: '5px', top: 20 }}>
-              Add New Solar Panel
-            </button>
+            {
+              panels.length > 0 && (
+                <button
+                  style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}
+                  onClick={openSolarModal}
+                  disabled={solarModalOpen}
+                >
+                  Add New Solar Panel
+                </button>
+              )
+            }
+            <SolarPanelModal />
           </div>
         </div>
       </div>
