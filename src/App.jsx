@@ -18,13 +18,22 @@ import {
 
 import GaugeChart from 'react-gauge-chart';
 import Switch from 'react-switch';
-import Modal from 'react-modal';
 
 import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
 import '@szhsin/react-menu/dist/index.css';
 import '@szhsin/react-menu/dist/transitions/slide.css';
 
-import { initDefault, fetchPVSystem, updateCoolingSystem } from './api/solar-api'
+import SolarPanelModal from './PanelModal';
+import BatteryModal from './BatteryModal';
+
+import {
+  initDefault,
+  fetchPVSystem,
+  updateCoolingSystem,
+  removePVPanel,
+  removePVBattery
+} from './api/solar-api';
+
 import './App.css'
 
 
@@ -36,7 +45,6 @@ const MenuIcon = () => (
   </svg>
 )
 
-Modal.setAppElement('#root');
 
 function App() {
   const [active, setActive] = useState(true)
@@ -67,6 +75,7 @@ function App() {
     window.innerWidth,
     window.innerHeight,
   ]);
+
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -106,12 +115,8 @@ function App() {
   }, [systemId, active])
 
   const updateSystemDetails = async () => {
-    console.log('system id: ', systemId)
-
     if (systemId && active) {
       const system = await fetchPVSystem(systemId);
-      console.log('system details: ', system);
-      console.log('data:', system['result']['time_series'])
       setBatteryArrayPower(system['result']['battery_array_soc'] * 100)
       setSolarArrayOutput(system['result']['total_solar_output'])
       setSystemData(system['result']['time_series'])
@@ -133,7 +138,6 @@ function App() {
     if (systemId == '') {
       const defaultSimulation = await initDefault();
       const sysId = defaultSimulation['result']['system_id']
-      console.log('got default sim: ', sysId)
       setSystemId(sysId)
     }
   }
@@ -146,11 +150,9 @@ function App() {
     if (hour >= 6 && hour < 18) {
       return '🌤'
     }
-  }
+  };
 
   const toggleBatteries = () => { };
-
-  const toggleBattery = (id) => { }
 
   const toggleCoolingSystems = () => {
     if (localCooling) {
@@ -162,263 +164,13 @@ function App() {
     }
   };
 
-  const removePanel = (panelId) => {
-    console.log(`removing panel: ${panelId}`)
+  const removePanel = async (panelId) => {
+    const result = await removePVPanel(systemId, panelId);
   }
 
-  const removeBattery = (batteryId) => {
-    {
-      console.log(`removing battery: ${batteryId}`)
-    }
-  }
-
-  let subtitle;
-  const [solarModalOpen, setSolarModalOpen] = useState(false);
-  const [batteryModalOpen, setBatteryModalOpen] = useState(false);
-  const [inverterModalOpen, setInverterModalOpen] = useState(false);
-
-  function openSolarModal() {
-    setSolarModalOpen(true);
-  }
-
-  function closeSolarModal() {
-    setSolarModalOpen(false);
-  }
-
-  const openBatteryModal = () => {
-    setBatteryModalOpen(true);
-  }
-
-  const closeBatteryModel = () => {
-    setBatteryModalOpen(false);
-  }
-
-  const openInverterModal = () => {
-    setInverterModalOpen(true);
-  }
-
-  const closeInverterModal = () => {
-    setInverterModalOpen(false);
-  }
-
-
-  const SolarPanelModal = () => {
-    return (
-      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
-        <Modal
-          isOpen={solarModalOpen}
-          onRequestClose={closeSolarModal}
-          style={{
-            overlay: {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'transparent',
-              textAlign: 'center',
-
-            },
-            content: {
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 500,
-              height: 555,
-              border: '10px solid grey',
-              background: '#111111',
-              overflow: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              borderRadius: '15px',
-              outline: 'none',
-              padding: '20px'
-            }
-          }}
-          contentLabel="Example Modal"
-        >
-          <h2>Add Solar Panel</h2>
-          <form >
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Power Rating (Watts):</label><br />
-              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='panel-efficiency' style={{ position: 'absolute', left: 20 }}>Efficiency (%):</label><br />
-              <input type='number' id='panel-efficiency' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Optimal Temperature (℃):</label><br />
-              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Temperature Coefficient (%):</label><br />
-              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 60 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20, top: 372 }}>
-                <p>
-                  {'Area ( '}
-                  <math>
-                    <msup>
-                      <mi>m</mi>
-                      <mn>2</mn>
-                    </msup>
-                  </math>
-                  {')'}
-                </p>
-              </label><br />
-              <input id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingTop: 10 }}>
-              <button
-                onClick={closeSolarModal}
-                style={{ position: 'absolute', right: 150, backgroundColor: 'red', borderRadius: 5 }}
-              >
-                Cancel
-              </button>
-              <button
-                type='submit'
-                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
-              >
-                Add Panel
-              </button>
-            </div>
-          </form>
-        </Modal>
-      </div>
-    );
+  const removeBattery = async (batteryId) => {
+    const result = await removePVBattery(systemId, batteryId)
   };
-
-  const BatteryModal = () => {
-    return (
-      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
-        <Modal
-          isOpen={batteryModalOpen}
-          onRequestClose={closeBatteryModel}
-          style={{
-            overlay: {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'transparent',
-              textAlign: 'center',
-
-            },
-            content: {
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 500,
-              height: 320,
-              border: '10px solid grey',
-              background: '#111111',
-              overflow: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              borderRadius: '15px',
-              outline: 'none',
-              padding: '20px'
-            }
-          }}
-          contentLabel="Example Modal"
-        >
-          <h2>Add Battery</h2>
-          <form >
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Volts:</label><br />
-              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Amperes (Ah):</label><br />
-              <input type='number' id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingTop: 40 }}>
-              <button
-                onClick={closeBatteryModel}
-                style={{ position: 'absolute', right: 165, backgroundColor: 'red', borderRadius: 5 }}
-              >
-                Cancel
-              </button>
-              <button
-                type='submit'
-                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
-              >
-                Add Battery
-              </button>
-            </div>
-          </form>
-        </Modal>
-      </div>
-    );
-  };
-
-  const InverterModal = () => {
-    return (
-      <div style={{ position: 'relative', display: 'flex', width: '100%', textAlign: 'center', justifyContent: 'center' }}>
-        <Modal
-          isOpen={inverterModalOpen}
-          onRequestClose={closeInverterModal}
-          style={{
-            overlay: {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'transparent',
-              textAlign: 'center',
-
-            },
-            content: {
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 500,
-              height: 333,
-              border: '10px solid grey',
-              background: '#111111',
-              overflow: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              borderRadius: '15px',
-              outline: 'none',
-              padding: '20px'
-            }
-          }}
-          contentLabel="Example Modal"
-        >
-          <h2>Edit Inverter</h2>
-          <form >
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Max Output (Watts):</label><br />
-              <input id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingBottom: 10 }}>
-              <label htmlFor='power-rating' style={{ position: 'absolute', left: 20 }}>Input Voltage (Volts):</label><br />
-              <input id='power-rating' style={{ width: '100%', height: 35 }} />
-            </div>
-            <div style={{ paddingTop: 10 }}>
-              <button
-                onClick={closeInverterModal}
-                style={{ position: 'absolute', right: 150, backgroundColor: 'red', borderRadius: 5 }}
-              >
-                Cancel
-              </button>
-              <button
-                type='submit'
-                style={{ position: 'absolute', right: 15, backgroundColor: 'green', borderRadius: 5 }}
-              >
-                Edit Inverter
-              </button>
-            </div>
-          </form>
-        </Modal>
-      </div>
-    )
-  }
 
   return (
     <>
@@ -574,7 +326,6 @@ function App() {
                         <label style={{ display: 'inline-block', position: 'absolute', top: 68, paddingLeft: 20 }}>
                           <Switch
                             onChange={() => toggleCoolingSystems()}
-                            // onClick={() => toggleCoolingSystems()}
                             checked={localCooling}
                             checkedIcon={false}
                             uncheckedIcon={false}
@@ -616,134 +367,101 @@ function App() {
           <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
             <p style={{ width: '50%', display: 'inline-block' }}>Battery Array</p>
           </div>
-          {
-            displayBatteries && (
-              <div>
-                {
-                  batteries.map((battery, index) => (
-                    <div key={index}>
-                      <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
-                        <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
-                          <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
-                          <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
-                            <Menu
-                              menuButton={<MenuButton><MenuIcon /></MenuButton>}
-                              menuStyle={{ backgroundColor: '#323030', color: 'white' }}
-                              key={`solar-panel-menu-${index}`}
-                              direction={'left'}
-                              transition
-                            >
-                              <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
-                              <MenuItem>Battery Details</MenuItem>
-                            </Menu>
-                          </div>
-                        </p>
-                      </div>
-                      {
-                        battery['time_series'] && (
-                          <div style={{ width: '100%' }}>
-                            <ResponsiveContainer width='100%' height={200}>
-                              <LineChart data={battery['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                                <Line name='Available Battery Power' type="monotone" dataKey='available_power' stroke="#8884d8" />
-                                <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                                <XAxis />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </div>
-                        )
-                      }
-                    </div>
-                  ))
-                }
-              </div>
-            )
-          }
-          <div style={{ position: 'relative' }}>
+
+          <div>
             {
-              batteries.length > 0 && (
-                <button
-                  style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}
-                  onClick={openBatteryModal}
-                  disabled={batteryModalOpen}
-                >
-                  Add New Battery
-                </button>
-              )
+              batteries.map((battery, index) => (
+                <div key={index}>
+                  <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
+                    <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
+                      <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
+                      <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                        <Menu
+                          menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                          menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                          key={`solar-panel-menu-${index}`}
+                          direction={'left'}
+                          transition
+                        >
+                          <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
+                          <MenuItem>Battery Details</MenuItem>
+                        </Menu>
+                      </div>
+                    </p>
+                  </div>
+                  {
+                    battery['time_series'] && (
+                      <div style={{ width: '100%' }}>
+                        <ResponsiveContainer width='100%' height={200}>
+                          <LineChart data={battery['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                            <Line name='Available Battery Power' type="monotone" dataKey='available_power' stroke="#8884d8" />
+                            <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                            <XAxis />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )
+                  }
+                </div>
+              ))
             }
-            <BatteryModal />
           </div>
+          { systemData.length > 0 && (<BatteryModal systemId={systemId} />) }
         </div>
         <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
           <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
             <p style={{ width: '50%', display: 'inline-block' }}>Solar Array</p>
           </div>
-          {
-            displayBatteries && (
-              <div>
-                {
-                  panels.map((panel, index) => (
-                    <div key={index}>
-                      <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
-                        <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
-                        <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
-                        <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
-                          <Menu
-                            menuButton={<MenuButton><MenuIcon /></MenuButton>}
-                            menuStyle={{ backgroundColor: '#323030', color: 'white' }}
-                            key={`solar-panel-menu-${index}`}
-                            direction={'left'}
-                            transition
-                          >
-                            <MenuItem onClick={() => removePanel(panel['panel_id'])}>Remove Panel</MenuItem>
-                            <MenuItem>Panel Details</MenuItem>
-                          </Menu>
-                        </div>
-                      </div>
-                      {
-                        panel['time_series'] && (
-                          <div style={{ width: '100%' }}>
-                            <ResponsiveContainer width='100%' height={200}>
-                              <LineChart data={panel['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                                <Line name="Solar Panel Output (Watts)" type="monotone" dataKey="power_output" stroke="#8884d8" />
-                                <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                                <XAxis />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                              </LineChart>
-                            </ResponsiveContainer>
-                          </div>
-                        )
-                      }
-                    </div>
-                  ))
-                }
-              </div>
-            )
-          }
-          <div style={{ position: 'relative' }}>
+          <div>
             {
-              panels.length > 0 && (
-                <button
-                  style={{ backgroundColor: 'green', position: 'absolute', left: '5px', top: 20 }}
-                  onClick={openSolarModal}
-                  disabled={solarModalOpen}
-                >
-                  Add New Solar Panel
-                </button>
-              )
+              panels.map((panel, index) => (
+                <div key={index}>
+                  <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
+                    <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
+                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
+                    <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                      <Menu
+                        menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                        menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                        key={`solar-panel-menu-${index}`}
+                        direction={'left'}
+                        transition
+                      >
+                        <MenuItem onClick={() => removePanel(panel['panel_id'])}>Remove Panel</MenuItem>
+                        <MenuItem>Panel Details</MenuItem>
+                      </Menu>
+                    </div>
+                  </div>
+                  {
+                    panel['time_series'] && (
+                      <div style={{ width: '100%' }}>
+                        <ResponsiveContainer width='100%' height={200}>
+                          <LineChart data={panel['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                            <Line name="Solar Panel Output (Watts)" type="monotone" dataKey="power_output" stroke="#8884d8" />
+                            <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                            <XAxis />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )
+                  }
+                </div>
+              ))
             }
-            <SolarPanelModal />
           </div>
+          {systemData.length > 0 && (<SolarPanelModal systemId={systemId} />)}
         </div>
       </div>
     </>
