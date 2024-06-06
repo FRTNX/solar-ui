@@ -16,14 +16,16 @@ const initDefault = async () => {
     }
 };
 
-const fetchPVSystem = async (systemId) => {
+const fetchPVSystem = async (params) => {
+    console.log('sending params: ', params)
     try {
-        const response = await fetch(`${BASE_URL}/pv/system?system_id=` + systemId , {
-            method: 'GET',
+        const response = await fetch(`${BASE_URL}/pv/system` , {
+            method: 'PUT',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify(params)
         });
         return await response.json();
     } catch (error) {
@@ -107,11 +109,28 @@ const removePVBattery = async (systemId, batteryId) => {
     } catch (error) {
         console.log(error)
     }
-}
+};
+
+const updateSystemIterations = async (params) => {
+    try {
+        const response = await fetch(`${BASE_URL}/pv/system/iterations`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(params)
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error)
+    }   
+};
 
 export {
     initDefault,
     fetchPVSystem,
+    updateSystemIterations,
     updateCoolingSystem,
     addPVBattery,
     removePVBattery,

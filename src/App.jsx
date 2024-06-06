@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+
 import BatteryGauge from 'react-battery-gauge';
 import { CircularProgressbarWithChildren, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -18,6 +19,7 @@ import {
 
 import GaugeChart from 'react-gauge-chart';
 import Switch from 'react-switch';
+import ReactSlider from 'react-slider';
 
 import { Menu, MenuItem, MenuButton } from '@szhsin/react-menu';
 import '@szhsin/react-menu/dist/index.css';
@@ -29,12 +31,44 @@ import BatteryModal from './BatteryModal';
 import {
   initDefault,
   fetchPVSystem,
+  updateSystemIterations,
   updateCoolingSystem,
   removePVPanel,
   removePVBattery
 } from './api/solar-api';
 
 import './App.css'
+
+import styled from 'styled-components';
+
+const StyledSlider = styled(ReactSlider)`
+    width: 100%;
+    height: 10px;
+`;
+
+const StyledThumb = styled.div`
+    height: 30px;
+    line-height: 30px;
+    width: 30px;
+    top: -10px;
+    text-align: center;
+    background-color: grey;
+    color: #fff;
+    border-radius: 50%;
+    border: none;
+    cursor: grab;
+`;
+
+const Thumb = (props, state) => <StyledThumb {...props}>{state.valueNow}</StyledThumb>;
+
+const StyledTrack = styled.div`
+    top: 0;
+    bottom: 0;
+    background: ${props => (props.index === 2 ? '#f00' : props.index === 1 ? '#ddd' : '#0f0')};
+    border-radius: 999px;
+`;
+
+const Track = (props, state) => <StyledTrack {...props} index={state.index} />;
 
 
 const PATH_TRANSITION_DURATION = 1.5;
@@ -64,18 +98,22 @@ function App() {
   const [aggrSolarOutput, setAggrSolarOutput] = useState(0);
 
   const [panels, setPanels] = useState([]);
-  const [inverterData, setInverterData] = useState({});
+  const [inverterData, setInverterData] = useState({ time_series: [] });
 
   const [coolingSystems, setCoolingSystems] = useState([]);
   const [localCooling, setLocalCooling] = useState(true);
   const [serverCooling, setServerCooling] = useState(true);
 
+  const [iterations, setIterations] = useState(252);
+  const [minIterations, setMinIterations] = useState(1);
+  const [updatingIter, setUpdatingIter] = useState(false);
+
   const [statsLeft, setStatsLeft] = useState(140);
+
   const [windowSize, setWindowSize] = useState([
     window.innerWidth,
     window.innerHeight,
   ]);
-
 
   useEffect(() => {
     const handleWindowResize = () => {
@@ -114,23 +152,79 @@ function App() {
     }
   }, [systemId, active])
 
+  // reconciles new server data with existing client data
+  const reconcile = (incomingData, existingData, identifier) => {
+    const currentData = [...existingData];
+    const reconciledData = []
+    incomingData.map((serverData) => {
+      let updated = false;
+      currentData.map((clientData) => {   // check if taregt already exists, if so, update target time series
+        if (serverData[identifier] === clientData[identifier]) {
+          const updatedData = { ...serverData, time_series: [...clientData['time_series'], ...serverData['time_series']] }
+          reconciledData.push(updatedData);
+          updated = true;
+        }
+      });
+
+      if (!updated) {                  // else this is a new data object
+        reconciledData.push(serverData);
+      }
+    })
+
+    return reconciledData;
+  };
+
+  const reconcileInverterData = (incomingInverterData) => {
+    return {
+      ...incomingInverterData,
+      time_series: [...inverterData['time_series'], ...incomingInverterData['time_series']]
+    };
+  }
+
+  const compileMetadata = () => {
+    const systemMeta = systemData.length;
+    const inverterMeta = inverterData?.time_series?.length || 0
+    const panelsMeta = panels.reduce((data, panel) => ({ ...data, [panel['panel_id']]: panel['time_series'].length }), {})
+    const batteriesMeta = batteries.reduce((data, battery) => ({ ...data, [battery['battery_id']]: battery['time_series'].length }), {})
+    const coolingSystemsMeta = coolingSystems.reduce((data, coolingSystem) => ({ ...data, [coolingSystem['panel_id']]: coolingSystem['time_series'].length }), {});
+    console.log('system data: ', systemData)
+    return {
+      system: systemMeta,
+      inverter: inverterMeta,
+      panels: panelsMeta,
+      batteries: batteriesMeta,
+      cooling_systems: coolingSystemsMeta
+    };
+  };
+
   const updateSystemDetails = async () => {
     if (systemId && active) {
-      const system = await fetchPVSystem(systemId);
+      const systemMetadata = compileMetadata();
+      // console.log('compiled metadata: ', systemMetadata)
+      const params = { system_id: systemId, ...systemMetadata }
+      const system = await fetchPVSystem(params);
+      console.log('res: ', system)
+      const reconciledPanels = reconcile(system['result']['panels'], panels, 'panel_id');
+      // console.log('reconciled panels: ', reconciledPanels)
+      const reconciledBatteries = reconcile(system['result']['batteries'], batteries, 'battery_id')
+      const reconciledInverter = reconcileInverterData(system['result']['inverter'])
+      const reconciledCoolingSystems = reconcile(system['result']['cooling_systems'], coolingSystems, 'panel_id')
       setBatteryArrayPower(system['result']['battery_array_soc'] * 100)
       setSolarArrayOutput(system['result']['total_solar_output'])
-      setSystemData(system['result']['time_series'])
+      setSystemData(current => [...systemData, ...system['result']['time_series']])
       setSystemTime(system['result']['datetime'])
-      setPanels(system['result']['panels'])
-      setBatteries(system['result']['batteries'])
+      setPanels(reconciledPanels)
+      setBatteries(reconciledBatteries)
       setActive(system['result']['active'])
       setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
-      setInverterData(system['result']['inverter']);
-      setCoolingSystems(system['result']['cooling_systems']);
+      setInverterData(reconciledInverter);
+      setCoolingSystems(reconciledCoolingSystems);
       setServerCooling(system['result']['panel_cooling']);
       setMaxSolarOutput(system['result']['max_solar_output']);
       setAggrSolarOutput(system['result']['aggregated_solar_output']);
+      setMinIterations(system['result']['current_iteration']);
+      setIterations(system['result']['max_iteration']);
     }
   };
 
@@ -164,12 +258,17 @@ function App() {
     }
   };
 
-  const removePanel = async (panelId) => {
-    const result = await removePVPanel(systemId, panelId);
-  }
+  const removePanel = (panelId) => { removePVPanel(systemId, panelId) }
 
-  const removeBattery = async (batteryId) => {
-    const result = await removePVBattery(systemId, batteryId)
+  const removeBattery = (batteryId) => { removePVBattery(systemId, batteryId) };
+
+  const updateIterations = async (value) => {
+    setUpdatingIter(true);
+    await updateSystemIterations({
+      system_id: systemId,
+      value
+    });
+    setUpdatingIter(false);
   };
 
   return (
@@ -262,6 +361,21 @@ function App() {
                     </div>
                   </div>
                 </div>
+                <div style={{ width: '100%' }}>
+                  <StyledSlider
+                    min={Number(minIterations / 84).toFixed(0)}
+                    max={30}
+                    defaultValue={[3]}
+                    renderTrack={Track} renderThumb={Thumb}
+                    onAfterChange={(value, index) =>
+                      // console.log(`onAfterChange: ${JSON.stringify({ value, index })}`)
+                      updateIterations(value)
+                    }
+                    disabled={updatingIter}
+                  />
+                  <p style={{ paddingTop: 5, color: 'grey' }}>{`Simulation Duration (${Number(iterations / 84).toFixed(0)} Days)`}</p>
+                </div>
+
                 <div>
                   <ResponsiveContainer width='100%' height={200}>
                     <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
@@ -412,7 +526,7 @@ function App() {
               ))
             }
           </div>
-          { systemData.length > 0 && (<BatteryModal systemId={systemId} />) }
+          {systemData.length > 0 && (<BatteryModal systemId={systemId} />)}
         </div>
         <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
           <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
