@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-
+import { RingLoader } from 'react-spinners';
 import BatteryGauge from 'react-battery-gauge';
+
 import { CircularProgressbarWithChildren, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
@@ -41,6 +42,12 @@ import './App.css'
 
 import styled from 'styled-components';
 
+const override = {
+  display: "block",
+  margin: "0 auto",
+  borderColor: "red",
+};
+
 const StyledSlider = styled(ReactSlider)`
     width: 100%;
     height: 10px;
@@ -69,7 +76,6 @@ const StyledTrack = styled.div`
 `;
 
 const Track = (props, state) => <StyledTrack {...props} index={state.index} />;
-
 
 const PATH_TRANSITION_DURATION = 1.5;
 
@@ -232,7 +238,7 @@ function App() {
     if (systemId == '') {
       const defaultSimulation = await initDefault();
       const sysId = defaultSimulation['result']['system_id']
-      setSystemId(sysId)
+      setSystemId(sysId);
     }
   }
 
@@ -273,186 +279,263 @@ function App() {
 
   return (
     <>
-      <div>
-        <div>
-          {
-            systemData.length > 0 && (
+      {
+        systemData.length === 0 && (
+          <div>
+            <RingLoader
+              color={'#ffffff'}
+              loading={systemData.length === 0}
+              cssOverride={override}
+              size={250}
+              aria-label="Loading Spinner"
+              data-testid="loader"
+            />
+            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 50, fontSize: 35}}>Preparing Simulation...</p>
+          </div>
+        )
+      }
+      {
+        systemData.length > 0 && (
+          <div>
+            <div>
               <div>
-                <div style={{ width: '100%', textAlign: 'center' }}>
-                  <div style={{ display: 'inline-block', width: '50%', position: 'relative' }}>
-                    <p style={{ fontSize: 100 }}>{systemTime.slice(11, 16)} {getTimeEmoji(Number(systemTime.slice(11, 13)))}</p>
-                    <p style={{ position: 'absolute', top: 230, left: statsLeft }}>
-                      {`Total Photovoltaic Output: ${Number(aggrSolarOutput / 1000).toFixed(2)} kW`}
-                    </p>
-                  </div>
-                  <div style={{ display: 'inline-block', width: '50%' }}>
-                    <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
-                      <CircularProgressbarWithChildren
-                        value={solarArrayOutput}
-                        maxValue={maxSolarOutput}
-                        styles={buildStyles({
-                          textSize: '10px',
-                          strokeLinecap: 'butt',
-                          pathColor: 'yellow',
-                          trailColor: 'grey',
-                          textColor: 'white',
-                          pathTransitionDuration: PATH_TRANSITION_DURATION
-                        })}
-                      >
-                        <div>
-                          <p style={{ fontSize: 11 }}>Solar Array Output</p>
-                          <p>
-                            {`${Number(solarArrayOutput).toFixed(2)} W/`}
-                            <math>
-                              <msup>
-                                <mi>m</mi>
-                                <mn>2</mn>
-                              </msup>
-                            </math>
+                {
+                  systemData.length > 0 && (
+                    <div>
+                      <div style={{ width: '100%', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-block', width: '50%', position: 'relative' }}>
+                          <p style={{ fontSize: 100 }}>{systemTime.slice(11, 16)} {getTimeEmoji(Number(systemTime.slice(11, 13)))}</p>
+                          <p style={{ position: 'absolute', top: 230, left: statsLeft }}>
+                            {`Total Photovoltaic Output: ${Number(aggrSolarOutput / 1000).toFixed(2)} kW`}
                           </p>
                         </div>
-                      </CircularProgressbarWithChildren>
-                    </div>
-                    <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
-                      <CircularProgressbarWithChildren
-                        value={solarIrradiance}
-                        maxValue={1100}
-                        styles={buildStyles({
-                          textSize: '10px',
-                          strokeLinecap: 'butt',
-                          pathColor: 'yellow',
-                          trailColor: 'grey',
-                          textColor: 'white',
-                          pathTransitionDuration: PATH_TRANSITION_DURATION
-                        })}
-                      >
-                        <div>
-                          <p style={{ fontSize: 11 }}>Solar Iraddiance</p>
-                          <p>
-                            {`${Number(solarIrradiance).toFixed(2)} W/`}
-                            <math>
-                              <msup>
-                                <mi>m</mi>
-                                <mn>2</mn>
-                              </msup>
-                            </math>
-                          </p>
+                        <div style={{ display: 'inline-block', width: '50%' }}>
+                          <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
+                            <CircularProgressbarWithChildren
+                              value={solarArrayOutput}
+                              maxValue={maxSolarOutput}
+                              styles={buildStyles({
+                                textSize: '10px',
+                                strokeLinecap: 'butt',
+                                pathColor: 'yellow',
+                                trailColor: 'grey',
+                                textColor: 'white',
+                                pathTransitionDuration: PATH_TRANSITION_DURATION
+                              })}
+                            >
+                              <div>
+                                <p style={{ fontSize: 11 }}>Solar Array Output</p>
+                                <p>
+                                  {`${Number(solarArrayOutput).toFixed(2)} W/`}
+                                  <math>
+                                    <msup>
+                                      <mi>m</mi>
+                                      <mn>2</mn>
+                                    </msup>
+                                  </math>
+                                </p>
+                              </div>
+                            </CircularProgressbarWithChildren>
+                          </div>
+                          <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
+                            <CircularProgressbarWithChildren
+                              value={solarIrradiance}
+                              maxValue={1100}
+                              styles={buildStyles({
+                                textSize: '10px',
+                                strokeLinecap: 'butt',
+                                pathColor: 'yellow',
+                                trailColor: 'grey',
+                                textColor: 'white',
+                                pathTransitionDuration: PATH_TRANSITION_DURATION
+                              })}
+                            >
+                              <div>
+                                <p style={{ fontSize: 11 }}>Solar Iraddiance</p>
+                                <p>
+                                  {`${Number(solarIrradiance).toFixed(2)} W/`}
+                                  <math>
+                                    <msup>
+                                      <mi>m</mi>
+                                      <mn>2</mn>
+                                    </msup>
+                                  </math>
+                                </p>
+                              </div>
+                            </CircularProgressbarWithChildren>
+                          </div>
+                          <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
+                            <CircularProgressbarWithChildren
+                              value={temperature}
+                              maxValue={40}
+                              styles={buildStyles({
+                                textSize: '10px',
+                                strokeLinecap: 'butt',
+                                pathColor: 'yellow',
+                                trailColor: 'grey',
+                                textColor: 'white',
+                                pathTransitionDuration: PATH_TRANSITION_DURATION
+                              })}
+                            >
+                              <div>
+                                <p style={{ fontSize: 11 }}>Temperature</p>
+                                <p>{`${Number(temperature).toFixed(1)} ℃`}<math></math></p>
+                              </div>
+                            </CircularProgressbarWithChildren>
+                          </div>
                         </div>
-                      </CircularProgressbarWithChildren>
+                      </div>
+                      <div style={{ width: '100%' }}>
+                        <StyledSlider
+                          min={Number(minIterations / 84).toFixed(0)}
+                          max={30}
+                          defaultValue={[3]}
+                          renderTrack={Track} renderThumb={Thumb}
+                          onAfterChange={(value, index) =>
+                            // console.log(`onAfterChange: ${JSON.stringify({ value, index })}`)
+                            updateIterations(value)
+                          }
+                          disabled={updatingIter}
+                        />
+                        <p style={{ paddingTop: 5, color: 'grey' }}>{`Simulation Duration (${Number(iterations / 84).toFixed(0)} Days)`}</p>
+                      </div>
+
+                      <div>
+                        <ResponsiveContainer width='100%' height={200}>
+                          <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                            <Area
+                              name='Total Solar Array Output (Watts)'
+                              label={'Solar Array Output'}
+                              type="monotone"
+                              dataKey="solar_array_output"
+                              stroke="#FFD700"
+                              fill='#FFD700'
+                              fillOpacity={0.65}
+                            />
+                            <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                            <XAxis dataKey="time" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div>
+                        {
+                          inverterData && (
+                            <div style={{ width: '100%', textAlign: 'center' }}>
+                              <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Inverter</p>
+                              <div style={{ width: '80%', display: 'inline-block' }}>
+                                <ResponsiveContainer width='100%' height={200}>
+                                  <AreaChart data={inverterData['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                    <Area
+                                      name='Inverter Output (Watts)'
+                                      type="monotone"
+                                      dataKey="output"
+                                      stroke="#82ca9d"
+                                      fill='#82ca9d'
+                                      fillOpacity={0.8}
+                                    />
+                                    <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                                    <XAxis />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                              <div style={{ width: '20%', display: 'inline-block', verticalAlign: 'top', paddingTop: 40 }}>
+                                <GaugeChart
+                                  id='gc-1'
+                                  nrOfLevels={30}
+                                  percent={inverterData['output'] / inverterData['max_output']}
+                                />
+                                <p style={{ color: 'grey' }}>Inverter Load</p>
+                              </div>
+                            </div>
+                          )
+                        }
+                      </div>
+                      <div>
+                        {
+                          coolingSystems.length > 0 && (
+                            <div style={{ width: '100%', textAlign: 'center', position: 'relative' }}>
+                              <p style={{ paddingTop: 30, fontSize: 30, color: 'grey', display: 'inline-block' }}>Cooling Systems</p>
+                              <label style={{ display: 'inline-block', position: 'absolute', top: 68, paddingLeft: 20 }}>
+                                <Switch
+                                  onChange={() => toggleCoolingSystems()}
+                                  checked={localCooling}
+                                  checkedIcon={false}
+                                  uncheckedIcon={false}
+                                  disabled={localCooling !== serverCooling}
+                                />
+                              </label>
+                              <br />
+                              {
+                                coolingSystems.map((coolingSystem, index) => (
+                                  <div style={{ width: '50%', display: 'inline-block' }}>
+                                    <ResponsiveContainer width='100%' height={200}>
+                                      <LineChart data={coolingSystem['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                        <Line name='Cooling System Output (℃)' type="monotone" dataKey='output' stroke="#8884d8" />
+                                        <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                                        <XAxis />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                                      </LineChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                ))
+                              }
+                            </div>
+                          )
+                        }
+                      </div>
                     </div>
-                    <div style={{ height: 150, width: 150, display: 'inline-block', padding: 10 }}>
-                      <CircularProgressbarWithChildren
-                        value={temperature}
-                        maxValue={40}
-                        styles={buildStyles({
-                          textSize: '10px',
-                          strokeLinecap: 'butt',
-                          pathColor: 'yellow',
-                          trailColor: 'grey',
-                          textColor: 'white',
-                          pathTransitionDuration: PATH_TRANSITION_DURATION
-                        })}
-                      >
-                        <div>
-                          <p style={{ fontSize: 11 }}>Temperature</p>
-                          <p>{`${Number(temperature).toFixed(1)} ℃`}<math></math></p>
-                        </div>
-                      </CircularProgressbarWithChildren>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ width: '100%' }}>
-                  <StyledSlider
-                    min={Number(minIterations / 84).toFixed(0)}
-                    max={30}
-                    defaultValue={[3]}
-                    renderTrack={Track} renderThumb={Thumb}
-                    onAfterChange={(value, index) =>
-                      // console.log(`onAfterChange: ${JSON.stringify({ value, index })}`)
-                      updateIterations(value)
-                    }
-                    disabled={updatingIter}
-                  />
-                  <p style={{ paddingTop: 5, color: 'grey' }}>{`Simulation Duration (${Number(iterations / 84).toFixed(0)} Days)`}</p>
+                  )
+                }
+              </div>
+            </div>
+            <div style={{ width: '100%', textAlign: 'center', paddingBottom: 200 }}>
+              <div style={{ width: 600, display: 'inline-block' }}>
+              </div>
+              <div style={{ width: 600, display: 'inline-block' }}>
+              </div>
+              <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
+                <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
+                  <p style={{ width: '50%', display: 'inline-block' }}>Battery Array</p>
                 </div>
 
                 <div>
-                  <ResponsiveContainer width='100%' height={200}>
-                    <AreaChart data={systemData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                      <Area
-                        name='Total Solar Array Output (Watts)'
-                        label={'Solar Array Output'}
-                        type="monotone"
-                        dataKey="solar_array_output"
-                        stroke="#FFD700"
-                        fill='#FFD700'
-                        fillOpacity={0.65}
-                      />
-                      <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-                <div>
                   {
-                    inverterData && (
-                      <div style={{ width: '100%', textAlign: 'center' }}>
-                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey' }}>Inverter</p>
-                        <div style={{ width: '80%', display: 'inline-block' }}>
-                          <ResponsiveContainer width='100%' height={200}>
-                            <AreaChart data={inverterData['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                              <Area
-                                name='Inverter Output (Watts)'
-                                type="monotone"
-                                dataKey="output"
-                                stroke="#82ca9d"
-                                fill='#82ca9d'
-                                fillOpacity={0.8}
-                              />
-                              <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                              <XAxis />
-                              <YAxis />
-                              <Tooltip />
-                              <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                            </AreaChart>
-                          </ResponsiveContainer>
+                    batteries.map((battery, index) => (
+                      <div key={index}>
+                        <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
+                          <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
+                            <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
+                            <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                              <Menu
+                                menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                                menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                                key={`solar-panel-menu-${index}`}
+                                direction={'left'}
+                                transition
+                              >
+                                <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
+                                <MenuItem>Battery Details</MenuItem>
+                              </Menu>
+                            </div>
+                          </p>
                         </div>
-                        <div style={{ width: '20%', display: 'inline-block', verticalAlign: 'top', paddingTop: 40 }}>
-                          <GaugeChart
-                            id='gc-1'
-                            nrOfLevels={30}
-                            percent={inverterData['output'] / inverterData['max_output']}
-                          />
-                          <p style={{ color: 'grey' }}>Inverter Load</p>
-                        </div>
-                      </div>
-                    )
-                  }
-                </div>
-                <div>
-                  {
-                    coolingSystems.length > 0 && (
-                      <div style={{ width: '100%', textAlign: 'center', position: 'relative' }}>
-                        <p style={{ paddingTop: 30, fontSize: 30, color: 'grey', display: 'inline-block' }}>Cooling Systems</p>
-                        <label style={{ display: 'inline-block', position: 'absolute', top: 68, paddingLeft: 20 }}>
-                          <Switch
-                            onChange={() => toggleCoolingSystems()}
-                            checked={localCooling}
-                            checkedIcon={false}
-                            uncheckedIcon={false}
-                            disabled={localCooling !== serverCooling}
-                          />
-                        </label>
-                        <br />
                         {
-                          coolingSystems.map((coolingSystem, index) => (
-                            <div style={{ width: '50%', display: 'inline-block' }}>
+                          battery['time_series'] && (
+                            <div style={{ width: '100%' }}>
                               <ResponsiveContainer width='100%' height={200}>
-                                <LineChart data={coolingSystem['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                                  <Line name='Cooling System Output (℃)' type="monotone" dataKey='output' stroke="#8884d8" />
+                                <LineChart data={battery['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                  <Line name='Available Battery Power' type="monotone" dataKey='available_power' stroke="#8884d8" />
                                   <CartesianGrid stroke="grey" strokeDasharray="3 3" />
                                   <XAxis />
                                   <YAxis />
@@ -461,123 +544,67 @@ function App() {
                                 </LineChart>
                               </ResponsiveContainer>
                             </div>
-                          ))
+                          )
                         }
                       </div>
-                    )
+                    ))
                   }
                 </div>
+                {systemData.length > 0 && (<BatteryModal systemId={systemId} />)}
               </div>
-            )
-          }
-        </div>
-      </div>
-      <div style={{ width: '100%', textAlign: 'center', paddingBottom: 200 }}>
-        <div style={{ width: 600, display: 'inline-block' }}>
-        </div>
-        <div style={{ width: 600, display: 'inline-block' }}>
-        </div>
-        <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
-          <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
-            <p style={{ width: '50%', display: 'inline-block' }}>Battery Array</p>
-          </div>
-
-          <div>
-            {
-              batteries.map((battery, index) => (
-                <div key={index}>
-                  <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
-                    <p style={{ display: 'inline-block' }}>{'Battery '}{index + 1}</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.capacity} V</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{battery.amps} Ah</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20, marginBottom: 10 }}>
-                      <BatteryGauge style={{ display: 'inline-block', position: 'absolute', top: 14 }} value={battery['soc'] * 100} size={50} />
-                      <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
-                        <Menu
-                          menuButton={<MenuButton><MenuIcon /></MenuButton>}
-                          menuStyle={{ backgroundColor: '#323030', color: 'white' }}
-                          key={`solar-panel-menu-${index}`}
-                          direction={'left'}
-                          transition
-                        >
-                          <MenuItem onClick={() => removeBattery(battery['battery_id'])}>Remove Battery</MenuItem>
-                          <MenuItem>Battery Details</MenuItem>
-                        </Menu>
-                      </div>
-                    </p>
-                  </div>
+              <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
+                <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
+                  <p style={{ width: '50%', display: 'inline-block' }}>Solar Array</p>
+                </div>
+                <div>
                   {
-                    battery['time_series'] && (
-                      <div style={{ width: '100%' }}>
-                        <ResponsiveContainer width='100%' height={200}>
-                          <LineChart data={battery['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                            <Line name='Available Battery Power' type="monotone" dataKey='available_power' stroke="#8884d8" />
-                            <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                            <XAxis />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                          </LineChart>
-                        </ResponsiveContainer>
+                    panels.map((panel, index) => (
+                      <div key={index}>
+                        <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
+                          <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
+                          <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
+                          <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
+                            <Menu
+                              menuButton={<MenuButton><MenuIcon /></MenuButton>}
+                              menuStyle={{ backgroundColor: '#323030', color: 'white' }}
+                              key={`solar-panel-menu-${index}`}
+                              direction={'left'}
+                              transition
+                            >
+                              <MenuItem onClick={() => removePanel(panel['panel_id'])}>Remove Panel</MenuItem>
+                              <MenuItem>Panel Details</MenuItem>
+                            </Menu>
+                          </div>
+                        </div>
+                        {
+                          panel['time_series'] && (
+                            <div style={{ width: '100%' }}>
+                              <ResponsiveContainer width='100%' height={200}>
+                                <LineChart data={panel['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
+                                  <Line name="Solar Panel Output (Watts)" type="monotone" dataKey="power_output" stroke="#8884d8" />
+                                  <CartesianGrid stroke="grey" strokeDasharray="3 3" />
+                                  <XAxis />
+                                  <YAxis />
+                                  <Tooltip />
+                                  <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          )
+                        }
                       </div>
-                    )
+                    ))
                   }
                 </div>
-              ))
-            }
+                {systemData.length > 0 && (<SolarPanelModal systemId={systemId} />)}
+              </div>
+            </div>
           </div>
-          {systemData.length > 0 && (<BatteryModal systemId={systemId} />)}
-        </div>
-        <div style={{ width: '50%', display: 'inline-block', verticalAlign: 'top' }} onClick={() => toggleBatteries()}>
-          <div style={{ width: '100%', backgroundColor: '#1a1a1a' }}>
-            <p style={{ width: '50%', display: 'inline-block' }}>Solar Array</p>
-          </div>
-          <div>
-            {
-              panels.map((panel, index) => (
-                <div key={index}>
-                  <div style={{ width: '100%', height: 60, backgroundColor: '#1a1a1a', position: 'relative' }}>
-                    <p style={{ display: 'inline-block' }}>{'Solar Panel '}{index + 1}</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{panel.rating} W</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{Number(panel['output']).toFixed(2)} W</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['temperature']).toFixed(1)} ℃`}</p>
-                    <p style={{ display: 'inline-block', paddingLeft: 20 }}>{`${Number(panel['efficiency'] * 100).toFixed(1)} %`}</p>
-                    <div style={{ display: 'inline-block', position: 'absolute', right: '5px', top: '8px' }}>
-                      <Menu
-                        menuButton={<MenuButton><MenuIcon /></MenuButton>}
-                        menuStyle={{ backgroundColor: '#323030', color: 'white' }}
-                        key={`solar-panel-menu-${index}`}
-                        direction={'left'}
-                        transition
-                      >
-                        <MenuItem onClick={() => removePanel(panel['panel_id'])}>Remove Panel</MenuItem>
-                        <MenuItem>Panel Details</MenuItem>
-                      </Menu>
-                    </div>
-                  </div>
-                  {
-                    panel['time_series'] && (
-                      <div style={{ width: '100%' }}>
-                        <ResponsiveContainer width='100%' height={200}>
-                          <LineChart data={panel['time_series']} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                            <Line name="Solar Panel Output (Watts)" type="monotone" dataKey="power_output" stroke="#8884d8" />
-                            <CartesianGrid stroke="grey" strokeDasharray="3 3" />
-                            <XAxis />
-                            <YAxis />
-                            <Tooltip />
-                            <Legend formatter={(value, entry, index) => <span style={{ color: 'grey' }}>{value}</span>} />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )
-                  }
-                </div>
-              ))
-            }
-          </div>
-          {systemData.length > 0 && (<SolarPanelModal systemId={systemId} />)}
-        </div>
-      </div>
+        )
+      }
     </>
   )
 }
