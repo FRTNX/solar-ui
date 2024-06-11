@@ -286,11 +286,11 @@ function App() {
               color={'#ffffff'}
               loading={systemData.length === 0}
               cssOverride={override}
-              size={250}
+              size={150}
               aria-label="Loading Spinner"
               data-testid="loader"
             />
-            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 50, fontSize: 35}}>Preparing Simulation...</p>
+            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 30, fontSize: 20}}>Preparing Simulation...</p>
           </div>
         )
       }
