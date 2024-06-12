@@ -96,7 +96,6 @@ function App() {
 
   const [batteryArrayPower, setBatteryArrayPower] = useState(0);
   const [batteries, setBatteries] = useState([]);
-  const [displayBatteries, setDisplayBatteries] = useState(true);
 
   const [solarIrradiance, setSolarIrradiance] = useState(0);
   const [solarArrayOutput, setSolarArrayOutput] = useState(0);
@@ -286,11 +285,11 @@ function App() {
               color={'#ffffff'}
               loading={systemData.length === 0}
               cssOverride={override}
-              size={150}
+              size={200}
               aria-label="Loading Spinner"
               data-testid="loader"
             />
-            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 30, fontSize: 20}}>Preparing Simulation...</p>
+            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 40, fontSize: 20}}>Preparing Simulation...</p>
           </div>
         )
       }
@@ -326,13 +325,7 @@ function App() {
                               <div>
                                 <p style={{ fontSize: 11 }}>Solar Array Output</p>
                                 <p>
-                                  {`${Number(solarArrayOutput).toFixed(2)} W/`}
-                                  <math>
-                                    <msup>
-                                      <mi>m</mi>
-                                      <mn>2</mn>
-                                    </msup>
-                                  </math>
+                                  {`${Number(solarArrayOutput).toFixed(2)} W`}
                                 </p>
                               </div>
                             </CircularProgressbarWithChildren>
