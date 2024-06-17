@@ -79,6 +79,7 @@ const StyledTrack = styled.div`
 const Track = (props, state) => <StyledTrack {...props} index={state.index} />;
 
 const PATH_TRANSITION_DURATION = 1.5;
+const META_ALGORITHM = false;
 
 const MenuIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-three-dots-vertical" viewBox="0 0 16 16">
@@ -161,13 +162,17 @@ function App() {
   const updateSystemDetails = async () => {
     if (systemId && active) {
       const system = await fetchPVSystem({ system_id: systemId });
-      console.log('res: ', system)
       setBatteryArrayPower(system['result']['battery_array_soc'] * 100)
       setSolarArrayOutput(system['result']['total_solar_output'])
-      setSystemData(current => [...current, ...system['result']['time_series']])
+      setSystemData(current => {
+        if (current.length === 0 || !META_ALGORITHM) {
+          return system['result']['time_series']
+        }
+        return [...current, ...system['result']['time_series']]
+      });
       setSystemTime(system['result']['datetime'])
       setPanels(current => {
-        if (current.length === 0) {
+        if (current.length === 0 || !META_ALGORITHM) {
           return system['result']['panels'];
         }
         const updatedPanels = [];
@@ -197,7 +202,7 @@ function App() {
       });
 
       setBatteries(current => {
-        if (current.length === 0) {
+        if (current.length === 0 || !META_ALGORITHM) {
           return system['result']['batteries'];
         }
         const updatedBatteries = [];
@@ -224,7 +229,7 @@ function App() {
       setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
       setInverterData(current => {
-        if (current['time_series'].length === 0) {
+        if (current['time_series'].length === 0 || !META_ALGORITHM) {
           return system['result']['inverter'];
         }
         const lastIndex = current['time_series'][current['time_series'].length - 1]['index']
@@ -240,7 +245,7 @@ function App() {
         }
       })
       setCoolingSystems(current => {
-        if (current.length === 0) {
+        if (current.length === 0 || !META_ALGORITHM) {
           return system['result']['cooling_systems'];
         }
         const updatedCooling = [];
@@ -266,13 +271,11 @@ function App() {
       setAggrSolarOutput(system['result']['aggregated_solar_output']);
       setMinIterations(system['result']['current_iteration']);
       setIterations(system['result']['max_iteration']);
-      acknowledgeMetadata(system['result']);
+      if (META_ALGORITHM) {
+        acknowledgeMetadata(system['result']);
+      }
     }
   };
-
-  const verifySequence = () => {
-
-  }
 
   const acknowledgeMetadata = async (data) => {
     const system = data['time_series'];
@@ -282,15 +285,15 @@ function App() {
     const panelIndices = data['panels'].reduce((result, panel) => ({
       ...result,
       [panel['panel_id']]: panel['time_series'][panel['time_series'].length - 1]['index']
-    }), {})
+    }), {});
     const batteryIndices = data['batteries'].reduce((result, battery) => ({
       ...result,
       [battery['battery_id']]: battery['time_series'][battery['time_series'].length - 1]['index']
-    }), {})
+    }), {});
     const coolingIndices = data['cooling_systems'].reduce((result, cooling) => ({
       ...result,
       [cooling['panel_id']]: cooling['time_series'][cooling['time_series'].length - 1]['index']
-    }), {})
+    }), {});
 
     const metadata = {
       system_id: systemId,
