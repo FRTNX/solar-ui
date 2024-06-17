@@ -127,6 +127,22 @@ const updateSystemIterations = async (params) => {
     }   
 };
 
+const updateMetadata = async (metadata) => {
+    try {
+        const response = await fetch(`${BASE_URL}/pv/metadata/update`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(metadata)
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error)
+    }   
+}
+
 export {
     initDefault,
     fetchPVSystem,
@@ -135,5 +151,6 @@ export {
     addPVBattery,
     removePVBattery,
     addPVPanel,
-    removePVPanel
+    removePVPanel,
+    updateMetadata
 };

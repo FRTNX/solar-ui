@@ -35,7 +35,8 @@ import {
   updateSystemIterations,
   updateCoolingSystem,
   removePVPanel,
-  removePVBattery
+  removePVBattery,
+  updateMetadata
 } from './api/solar-api';
 
 import './App.css'
@@ -155,83 +156,153 @@ function App() {
     return () => {
       clearInterval(interval);
     }
-  }, [systemId, active])
-
-  // reconciles new server data with existing client data
-  const reconcile = (incomingData, existingData, identifier) => {
-    const currentData = [...existingData];
-    const reconciledData = []
-    incomingData.map((serverData) => {
-      let updated = false;
-      currentData.map((clientData) => {   // check if taregt already exists, if so, update target time series
-        if (serverData[identifier] === clientData[identifier]) {
-          const updatedData = { ...serverData, time_series: [...clientData['time_series'], ...serverData['time_series']] }
-          reconciledData.push(updatedData);
-          updated = true;
-        }
-      });
-
-      if (!updated) {                  // else this is a new data object
-        reconciledData.push(serverData);
-      }
-    })
-
-    return reconciledData;
-  };
-
-  const reconcileInverterData = (incomingInverterData) => {
-    return {
-      ...incomingInverterData,
-      time_series: [...inverterData['time_series'], ...incomingInverterData['time_series']]
-    };
-  }
-
-  const compileMetadata = () => {
-    const systemMeta = systemData.length;
-    const inverterMeta = inverterData?.time_series?.length || 0
-    const panelsMeta = panels.reduce((data, panel) => ({ ...data, [panel['panel_id']]: panel['time_series'].length }), {})
-    const batteriesMeta = batteries.reduce((data, battery) => ({ ...data, [battery['battery_id']]: battery['time_series'].length }), {})
-    const coolingSystemsMeta = coolingSystems.reduce((data, coolingSystem) => ({ ...data, [coolingSystem['panel_id']]: coolingSystem['time_series'].length }), {});
-    console.log('system data: ', systemData)
-    return {
-      system: systemMeta,
-      inverter: inverterMeta,
-      panels: panelsMeta,
-      batteries: batteriesMeta,
-      cooling_systems: coolingSystemsMeta
-    };
-  };
+  }, [systemId, active]);
 
   const updateSystemDetails = async () => {
     if (systemId && active) {
-      const systemMetadata = compileMetadata();
-      // console.log('compiled metadata: ', systemMetadata)
-      const params = { system_id: systemId, ...systemMetadata }
-      const system = await fetchPVSystem(params);
+      const system = await fetchPVSystem({ system_id: systemId });
       console.log('res: ', system)
-      const reconciledPanels = reconcile(system['result']['panels'], panels, 'panel_id');
-      // console.log('reconciled panels: ', reconciledPanels)
-      const reconciledBatteries = reconcile(system['result']['batteries'], batteries, 'battery_id')
-      const reconciledInverter = reconcileInverterData(system['result']['inverter'])
-      const reconciledCoolingSystems = reconcile(system['result']['cooling_systems'], coolingSystems, 'panel_id')
       setBatteryArrayPower(system['result']['battery_array_soc'] * 100)
       setSolarArrayOutput(system['result']['total_solar_output'])
-      setSystemData(current => [...systemData, ...system['result']['time_series']])
+      setSystemData(current => [...current, ...system['result']['time_series']])
       setSystemTime(system['result']['datetime'])
-      setPanels(reconciledPanels)
-      setBatteries(reconciledBatteries)
+      setPanels(current => {
+        if (current.length === 0) {
+          return system['result']['panels'];
+        }
+        const updatedPanels = [];
+        system['result']['panels'].map((incomingPanel) => {
+          let found = false;
+          current.map((existingPanel) => {
+            if (existingPanel['panel_id'] === incomingPanel['panel_id']) {
+              const lastIndex = existingPanel['time_series'][existingPanel['time_series'].length - 1]['index']
+              let startSlice;
+              incomingPanel['time_series'].map((data, index) => {
+                if (data['index'] === lastIndex + 1) { startSlice = index }
+              });
+              if (!startSlice) { console.log('BAD SEQUENCE') }
+              const contiguousSequence = incomingPanel['time_series'].slice(startSlice)
+              updatedPanels.push({
+                ...incomingPanel,
+                time_series: [...existingPanel['time_series'], ...contiguousSequence]
+              });
+              found = true;
+            }
+          })
+          if (!found) {     // this means this is a new panel
+            updatedPanels.push(incomingPanel)
+          }
+        })
+        return updatedPanels;
+      });
+
+      setBatteries(current => {
+        if (current.length === 0) {
+          return system['result']['batteries'];
+        }
+        const updatedBatteries = [];
+        system['result']['batteries'].map((incomingBattery) => {
+          let found = false;
+          current.map((existingBattery) => {
+            if (existingBattery['battery_id'] === incomingBattery['battery_id']) {
+              updatedBatteries.push({
+                ...incomingBattery,
+                time_series: [...existingBattery['time_series'], ...incomingBattery['time_series']]
+              });
+              found = true;
+
+            }
+          })
+          if (!found) {    // new battery
+            updatedBatteries.push(incomingBattery);
+          }
+        })
+        return updatedBatteries;
+      })
+
       setActive(system['result']['active'])
       setTemperature(system['result']['temperature'])
       setSolarIrradiance(system['result']['solar_irradiance'])
-      setInverterData(reconciledInverter);
-      setCoolingSystems(reconciledCoolingSystems);
+      setInverterData(current => {
+        if (current['time_series'].length === 0) {
+          return system['result']['inverter'];
+        }
+        const lastIndex = current['time_series'][current['time_series'].length - 1]['index']
+        let startSlice;
+        system['result']['inverter']['time_series'].map((data, index) => {
+          if (data['index'] === lastIndex + 1) { startSlice = index }
+        });
+        if (!startSlice) { console.log('BAD SEQUENCE') }
+        const contiguousSequence = system['result']['inverter']['time_series'].slice(startSlice)
+        return {
+          ...system['result']['inverter'],
+          time_series: [...current['time_series'], ...contiguousSequence]
+        }
+      })
+      setCoolingSystems(current => {
+        if (current.length === 0) {
+          return system['result']['cooling_systems'];
+        }
+        const updatedCooling = [];
+        system['result']['cooling_systems'].map((incomingCooling) => {
+          let found = false;
+          current.map((existingCooling) => {
+            if (existingCooling['panel_id'] === incomingCooling['panel_id']) {
+              updatedCooling.push({
+                ...incomingCooling,
+                time_series: [...existingCooling['time_series'], ...incomingCooling['time_series']]
+              });
+              found = true;
+            }
+          })
+          if (!found) {
+            updatedCooling.push(incomingCooling);
+          }
+        })
+        return updatedCooling;
+      });
       setServerCooling(system['result']['panel_cooling']);
       setMaxSolarOutput(system['result']['max_solar_output']);
       setAggrSolarOutput(system['result']['aggregated_solar_output']);
       setMinIterations(system['result']['current_iteration']);
       setIterations(system['result']['max_iteration']);
+      acknowledgeMetadata(system['result']);
     }
   };
+
+  const verifySequence = () => {
+
+  }
+
+  const acknowledgeMetadata = async (data) => {
+    const system = data['time_series'];
+    const systemIndex = system[system.length - 1]['index'];
+    const inverter = data['inverter']['time_series'];
+    const inverterIndex = inverter[inverter.length - 1]['index'];
+    const panelIndices = data['panels'].reduce((result, panel) => ({
+      ...result,
+      [panel['panel_id']]: panel['time_series'][panel['time_series'].length - 1]['index']
+    }), {})
+    const batteryIndices = data['batteries'].reduce((result, battery) => ({
+      ...result,
+      [battery['battery_id']]: battery['time_series'][battery['time_series'].length - 1]['index']
+    }), {})
+    const coolingIndices = data['cooling_systems'].reduce((result, cooling) => ({
+      ...result,
+      [cooling['panel_id']]: cooling['time_series'][cooling['time_series'].length - 1]['index']
+    }), {})
+
+    const metadata = {
+      system_id: systemId,
+      system: systemIndex,
+      inverter: inverterIndex,
+      panels: panelIndices,
+      batteries: batteryIndices,
+      cooling_systems: coolingIndices
+    };
+
+    await updateMetadata(metadata);
+  }
 
   const initialiseDefaultSimulation = async () => {
     if (systemId == '') {
@@ -289,7 +360,7 @@ function App() {
               aria-label="Loading Spinner"
               data-testid="loader"
             />
-            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 40, fontSize: 20}}>Preparing Simulation...</p>
+            <p style={{ color: 'white', paddingTop: 100, paddingLeft: 40, fontSize: 20 }}>Preparing Simulation...</p>
           </div>
         )
       }
