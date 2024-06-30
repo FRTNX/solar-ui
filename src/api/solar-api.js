@@ -1,5 +1,5 @@
-const BASE_URL = 'https://solar-sim.onrender.com';
-// const BASE_URL = 'http://localhost:8001';
+// const BASE_URL = 'https://solar-sim.onrender.com';
+const BASE_URL = 'http://localhost:8001';
 
 const initDefault = async () => {
     try {
@@ -26,6 +26,21 @@ const fetchPVSystem = async (params) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(params)
+        });
+        return await response.json();
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+const fetchSystemData = async (systemId, target) => {
+    try {
+        const response = await fetch(`${BASE_URL}/pv/system/data?system_id=${systemId}&&target_data=${target}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
         });
         return await response.json();
     } catch (error) {
@@ -146,6 +161,7 @@ const updateMetadata = async (metadata) => {
 export {
     initDefault,
     fetchPVSystem,
+    fetchSystemData,
     updateSystemIterations,
     updateCoolingSystem,
     addPVBattery,
